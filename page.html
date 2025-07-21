@@ -9,10 +9,26 @@
   </style>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/PointerLockControls.js"></script>
-  <script>
-    
+    <script>
+    // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/
+
+    const mazeSize = { x: 5 , y: 5 };
+    const getRandomInt = (max) => Math.floor(Math.random() * max);
+
+    const mazeInit = (x,y) => {
+      const maze = new Array(y*2+1)
+      for(let i = 0; i < y; i++) {
+        maze[i] = new Array(x*2+1).fill(1);
+      }
+      const start = "";
+      
+
+      return maze;
+    }
+
+
+    const maze = mazeInit(mazeSize.x,mazeSize.y);
+    console.log(maze);
   </script>
 </body>
 </html>
