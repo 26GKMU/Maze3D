@@ -9,19 +9,35 @@
   </style>
 </head>
 <body>
-  <canvas id="Maze3D" width="400" height="300"></canvas>
+  <canvas id="Maze3D" width="400" height="300" style="margin:16px"></canvas>
+  <button onclick="draw2dmaze()">めいろ</button>
   <script>
     // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/
     const getRandomInt = (max) => Math.floor(Math.random() * max);
 
-    const [width,height] = [5,6]
+    const [width,height] = [8,6]
     const mazeSize = { x: width*2+1 , y: height*2+1 };
-    const start = { x: getRandomInt(width)*2+1, y: getRandomInt(height)*2+1 };
-    const goal ={ x: getRandomInt(width)*2+1, y: getRandomInt(height)*2+1 };
+    const start = { 
+      x: 0,
+      y: 0
+    };
+    const goal ={ 
+      x: width,
+      y: height
+    };
     const dirs =[[-2,0],[2,0],[0,-2],[0,2]];
+
+    const canvas = document.getElementById("Maze3D");
+    const ctx = canvas.getContext("2d");
     
-    const maze = Array.from({ length: mazeSize.y }, () => Array(mazeSize.x).fill(1));
-    function shuffle(array){
+    let maze = Array.from({ length: mazeSize.y }, () => Array(mazeSize.x).fill(1));
+    const mazeInit = () => {
+      maze = Array.from({ length: mazeSize.y }, () => Array(mazeSize.x).fill(1));
+      [start.x,start.y] = [getRandomInt(width),getRandomInt(height)];
+      [goal.x,goal.y] = [getRandomInt(width),getRandomInt(height)];//ここかぶる場合のチェック
+      
+    }
+      function shuffle(array){
       for (let i = 0; i < array.length; i++) {
         const r = getRandomInt(i+1);
         [array[i], array[r]] = [array[r], array[i]];
@@ -29,6 +45,12 @@
       return array;
     }
     function mazeGenerator(x,y){
+      mazeInit();
+      dig(x,y);
+      randWallBraek(x,y);
+      console.log(x,y,maze,start,goal);
+    }
+    function dig(x,y){
       maze[y][x] = 0;
 
       const dir = shuffle([...dirs]);
@@ -40,12 +62,61 @@
 
         if (0 < nx && nx < mazeSize.x - 1 && 0 < ny && ny < mazeSize.y - 1 && maze[ny][nx] === 1) {
           maze[my][mx] = 0;
-          mazeGenerator(nx, ny);
+          dig(nx, ny);
         }
       }
     }
+    function randWallBraek(){
+      const breakNum = Math.floor(width*height/5);
+      const wallList = [];
+      for (let y = 1; y < mazeSize.y - 1; y++) {
+        for (let x = 1; x < mazeSize.x - 1; x++) {
+          if (maze[y][x] === 1) {
+            const isVerticalWall = x % 2 === 0 && y % 2 === 1;
+            const isHorizontalWall = x % 2 === 1 && y % 2 === 0;
 
-    mazeGenerator(start.x,start.y);
+            if (isVerticalWall || isHorizontalWall) {
+              wallList.push({ x, y });
+            }
+          }
+        }
+      }
+      shuffle(wallList);
+
+      for (let i = 0; i < breakNum && i < wallList.length; i++) {
+        const { x, y } = wallList[i];
+        maze[y][x] = 0;
+      }
+    }
+
+    function draw2dmaze(){
+      mazeGenerator(2*start.x+1,2*start.y+1);
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const wallWidth = {
+        x: canvas.width/(width*10),
+        y: canvas.height/(height*10)
+      }
+      ctx.fillStyle = "black";
+      for(let y = 0; y <= height; y++){
+        for(let x = 0; x <= width; x++){
+          let cx = x*2+1;
+          let cy = y*2+1;
+          if(cx < 2*width*1 && maze[cy-1][cx]==1){
+            ctx.fillRect((x*10-1)*wallWidth.x, (y*10-1)*wallWidth.y, 12*wallWidth.x, 2*wallWidth.y);
+          }
+          if(cy < 2*height+1 && maze[cy][cx-1]==1){
+            ctx.fillRect((x*10-1)*wallWidth.x, (y*10-1)*wallWidth.y, 2*wallWidth.x, 12*wallWidth.y);
+          }
+        }
+      }
+      ctx.fillStyle="green";
+      ctx.fillRect((start.x*10+2)*wallWidth.x, (start.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
+      ctx.fillStyle="red";
+      ctx.fillRect((goal.x*10+2)*wallWidth.x, (goal.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
+    }
+
+
   </script>
 </body>
 </html>
