@@ -9,8 +9,8 @@
   </style>
 </head>
 <body>
-  <canvas id="Maze3D" width="400" height="300" style="margin:16px"></canvas>
-  <button onclick="draw2dmaze()">めいろ</button>
+  <canvas id="Maze3D" style="margin:16px"></canvas>
+  <button onclick="draw2dmaze()">2dmap生成</button><button onclick="draw3dmaze()">3dmap生成(未)</button>
   <script>
     // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/
     const getRandomInt = (max) => Math.floor(Math.random() * max);
@@ -28,14 +28,16 @@
     const dirs =[[-2,0],[2,0],[0,-2],[0,2]];
 
     const canvas = document.getElementById("Maze3D");
+    [canvas.width,canvas.height] = [width*40,height*40]
     const ctx = canvas.getContext("2d");
     
     let maze = Array.from({ length: mazeSize.y }, () => Array(mazeSize.x).fill(1));
     const mazeInit = () => {
       maze = Array.from({ length: mazeSize.y }, () => Array(mazeSize.x).fill(1));
       [start.x,start.y] = [getRandomInt(width),getRandomInt(height)];
-      [goal.x,goal.y] = [getRandomInt(width),getRandomInt(height)];//ここかぶる場合のチェック
-      
+      do{
+        [goal.x,goal.y] = [getRandomInt(width),getRandomInt(height)];
+      }while(goal.x == start.x && goal.y == start.y);      
     }
       function shuffle(array){
       for (let i = 0; i < array.length; i++) {
@@ -48,7 +50,6 @@
       mazeInit();
       dig(x,y);
       randWallBraek(x,y);
-      console.log(x,y,maze,start,goal);
     }
     function dig(x,y){
       maze[y][x] = 0;
@@ -72,17 +73,13 @@
       for (let y = 1; y < mazeSize.y - 1; y++) {
         for (let x = 1; x < mazeSize.x - 1; x++) {
           if (maze[y][x] === 1) {
-            const isVerticalWall = x % 2 === 0 && y % 2 === 1;
-            const isHorizontalWall = x % 2 === 1 && y % 2 === 0;
-
-            if (isVerticalWall || isHorizontalWall) {
+            if (x*y % 4 != 0) {
               wallList.push({ x, y });
             }
           }
         }
       }
       shuffle(wallList);
-
       for (let i = 0; i < breakNum && i < wallList.length; i++) {
         const { x, y } = wallList[i];
         maze[y][x] = 0;
@@ -110,12 +107,15 @@
           }
         }
       }
-      ctx.fillStyle="green";
+      ctx.fillStyle="#82d563";
       ctx.fillRect((start.x*10+2)*wallWidth.x, (start.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
       ctx.fillStyle="red";
       ctx.fillRect((goal.x*10+2)*wallWidth.x, (goal.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
     }
-
+    function draw3dmaze(){
+      mazeGenerator(2*start.x+1,2*start.y+1);
+      
+    }
 
   </script>
 </body>
