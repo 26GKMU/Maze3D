@@ -141,6 +141,9 @@
         case 3: player.img.src = "img/dot_left.png";  break;
       }
     }
+    function isGoal(player){
+      if(player.x == goal.x && player.y == goal.y) alert("goal!");
+    };
     function keyEvent( event ) {
       if (event.repeat) return;
       const key_code = event.keyCode;
@@ -156,6 +159,7 @@
       if( key_code === 40 ) player.dir = (player.dir+2) % 4;
       setPlayerImg(player.dir);
       event.preventDefault();
+      isGoal(player);
     }
     function main(){
       addEventListener("keydown", keyEvent, false);
