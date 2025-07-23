@@ -9,14 +9,13 @@
   </style>
 </head>
 <body>
-  <canvas id="Maze3D" style="margin:16px"></canvas>
-  <button onclick="clickButton2d()">2dmap生成</button><button onclick="draw3dmaze()">3dmap生成(未)</button>
+  <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
+  <button onclick="onclick2dm()">2dmap生成</button><button onclick="onclick3dm()">3dmap生成(未)</button>
   <script>
-    // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/
-    const getRandomInt = (max) => Math.floor(Math.random() * max);
+    // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/  
 
-    const [width,height] = [8,6]
-    const mSize = { x: width*2+1 , y: height*2+1 };
+    const [width,height] = [8,6]  //マスのサイズ
+    const mSize = { x: width*2+1 , y: height*2+1 }; //壁も含めたサイズ
     const start = { 
       x: 0,
       y: 0
@@ -25,13 +24,16 @@
       x: width,
       y: height
     };
-    const dirs =[[0,-1],[1,0],[0,1],[-1,0]];
+    const dirs =[[0,-1],[1,0],[0,1],[-1,0]];//
 
     const canvas = document.getElementById("Maze3D");
-    [canvas.width,canvas.height] = [width*40,height*40]
+    const TileSize = 40;
+    [canvas.width,canvas.height] = [width*TileSize,height*TileSize]
     const ctx = canvas.getContext("2d");
     
     let maze = Array.from({ length: mSize.y }, () => Array(mSize.x).fill(1));
+    const getRandomInt = (max) => Math.floor(Math.random() * max);
+
     const mazeInit = () => {
       maze = Array.from({ length: mSize.y }, () => Array(mSize.x).fill(1));
       [start.x,start.y] = [getRandomInt(width),getRandomInt(height)];
@@ -39,7 +41,7 @@
         [goal.x,goal.y] = [getRandomInt(width),getRandomInt(height)];
       }while(goal.x == start.x && goal.y == start.y);      
     }
-      function shuffle(array){
+    function shuffle(array){
       for (let i = 0; i < array.length; i++) {
         const r = getRandomInt(i+1);
         [array[i], array[r]] = [array[r], array[i]];
@@ -51,7 +53,7 @@
       dig(x,y);
       randWallBraek(x,y);
       setplayer();
-      window.addEventListener("load", main(),false);
+      window.addEventListener("load", main(), false);
     }
     function dig(x,y){
       maze[y][x] = 0;
@@ -75,7 +77,7 @@
       for (let y = 1; y < mSize.y - 1; y++) {
         for (let x = 1; x < mSize.x - 1; x++) {
           if (maze[y][x] === 1) {
-            if (x*y % 4 != 0) {
+            if (x % 2 === 1 || y % 2 === 1) {
               wallList.push({ x, y });
             }
           }
@@ -87,11 +89,11 @@
         maze[y][x] = 0;
       }
     }
-    function clickButton2d(){
+    function onclick2dm(){
       mazeGenerator(2*start.x+1,2*start.y+1);
-      draw2dmaze();
+      draw2dm();
     }
-    function draw2dmaze(){
+    function draw2dm(){
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const wallWidth = {
         x: canvas.width/(width*10),
@@ -114,37 +116,52 @@
       ctx.fillRect((start.x*10+2)*wallWidth.x, (start.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
       ctx.fillStyle="red";
       ctx.fillRect((goal.x*10+2)*wallWidth.x, (goal.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
+      player.img.onload = () => {
+        draw2dm();
+        ctx.drawImage(player.img, (player.x)*TileSize +4, (player.y)*TileSize +4);
+      }
     }
 
-    function draw3dmaze(){
+    function onclick3dm(){
       mazeGenerator(2*start.x+1,2*start.y+1);
-      
+      canvas.width = 720;
+      canvas.height= canvas.width*3/4;
+      draw3dm();
     }
+    function draw3dm(){
+
+      const cell = canvas.width/40;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, 30*cell);
+      ctx.fillStyle = "Gray"
+      ctx.fillRect(0, 0, canvas.width, 9*cell-1);
+      ctx.fillRect(0, 21*cell, canvas.width, 9*cell); 
+    }
+
+  //player関連
     const player = new Object();
     function setplayer(){
       player.img = new Image();
-      player.img.src = "img/dot_right.png";
       player.x = start.x
       player.y = start.y;
-      player.dir = 1; //n:0 e:1 s:2 w:3
-
-      player.img.onload = () => {
-        draw2dmaze();
-        ctx.drawImage(player.img, (player.x)*40 +4, (player.y)*40 +4);
-      }
+      player.dir = 2; //n:0 e:1 s:2 w:3
+      setPlayerImg()
     }
-    function setPlayerImg(dir){
-      switch (dir){
+    function setPlayerImg(){
+      switch (player.dir){
         case 0: player.img.src = "img/dot_up.png";    break;
         case 1: player.img.src = "img/dot_right.png"; break;
         case 2: player.img.src = "img/dot_down.png";  break;
         case 3: player.img.src = "img/dot_left.png";  break;
       }
     }
-    function isGoal(player){
+    function isGoal(){
       if(player.x == goal.x && player.y == goal.y) alert("goal!");
     };
-    function keyEvent( event ) {
+    
+  //key関連
+    function keyEvent( event ) { 
       if (event.repeat) return;
       const key_code = event.keyCode;
       if( key_code === 37 ) player.dir = (player.dir+3) % 4;
@@ -157,9 +174,9 @@
       }
       if( key_code === 39 ) player.dir = (player.dir+1) % 4;
       if( key_code === 40 ) player.dir = (player.dir+2) % 4;
-      setPlayerImg(player.dir);
+      setPlayerImg();
       event.preventDefault();
-      isGoal(player);gi
+      isGoal();
     }
     function main(){
       addEventListener("keydown", keyEvent, false);
