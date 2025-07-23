@@ -186,6 +186,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       player.view = playerView();
+      const [hw,vw] = [player.view.hw,player.view.hw];  
 
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, canvas.width, 30*cell);
@@ -194,20 +195,36 @@
       ctx.fillRect(0, 21*cell, canvas.width, 9*cell);
 
       ctx.fillStyle = "DarkGray";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
 
-      if(hw[3][0]) ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
-      if(hw[3][1]) ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+// w*h:40*30  vw3:12*12 3, vw2:16*16 4 ,vw1:24*24 6 
+
+      if(hw[3][0]) ctx.fillRect(11*cell, 9*cell, 3*cell, 12*cell);
+      if(hw[3][1]) ctx.fillRect(26*cell, 9*cell, 3*cell, 12*cell);
 
       if(vw[2][0]) ctx.fillRect(0, 9*cell, 14*cell, 12*cell);
       if(vw[2][1]) ctx.fillRect(11*cell, 9*cell, 18*cell, 12*cell);
       if(vw[2][2]) ctx.fillRect(26*cell, 9*cell, 14*cell, 12*cell);
 
       if(hw[2][0]){
-        ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
+        ctx.fillStyle = "blue"
+        ctx.beginPath();
+        ctx.moveTo(8*cell,7*cell);  ctx.lineTo(12*cell,7*cell);
+        ctx.lineTo(14*cell,9*cell); ctx.lineTo(14*cell,21*cell);
+        ctx.lineTo(12*cell,23*cell); ctx.lineTo(8*cell,23*cell);                  
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle ="darkGray"
       }
       if(hw[2][1]){
-        ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+        ctx.fillStyle = "blue"
+        ctx.beginPath();
+        ctx.moveTo(32*cell,7*cell);  ctx.lineTo(28*cell,7*cell);
+        ctx.lineTo(26*cell,9*cell); ctx.lineTo(26*cell,21*cell);
+        ctx.lineTo(28*cell,23*cell); ctx.lineTo(32*cell,23*cell);                  
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle ="darkGray"
       }
 
       if(vw[1][0]) ctx.fillRect(0, 7*cell, 12*cell, 16*cell);
@@ -215,10 +232,10 @@
       if(vw[1][2]) ctx.fillRect(28*cell, 7*cell, 12*cell, 16*cell);
 
       if(hw[1][0]){
-        ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
+        // ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
       }
       if(hw[1][1]){
-        ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+        // ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
       }
 
       if(vw[0][0]) ctx.fillRect(0, 3*cell, 8*cell, 24*cell);
@@ -226,10 +243,10 @@
       if(vw[0][2]) ctx.fillRect(32*cell, 3*cell, 8*cell, 24*cell);
 
       if(hw[0][0]){
-        ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
+        // ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
       }
       if(hw[0][1]){
-        ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+        // ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
       }
     }
 
