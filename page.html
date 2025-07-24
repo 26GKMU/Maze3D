@@ -9,13 +9,16 @@
   </style>
 </head>
 <body>
-  <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
-  <button onclick="onclick2dm()">2dmap生成</button><button onclick="onclick3dm()">3dmap生成(未)</button>
-  <script>
-    // 3d表示参考 https://2dgames.jp/fake-3d-dungeon/  
 
-    const [width,height] = [8,6]  //マスのサイズ
+  <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
+  <div id="level" style="min-width: 100px"></div><button onclick="makemaze()">map生成</button>
+  <!-- <button onclick="onclick3dm()">3dmode</button>
+  <button onclick="onclick2dm()">2dmode</button> -->
+  <script>
+
+    let [width,height,level] = [8,6,1]  //マスのサイズ
     const mSize = { x: width*2+1 , y: height*2+1 }; //壁も含めたサイズ
+    let mode3D = true;
     const start = { 
       x: 0,
       y: 0
@@ -26,6 +29,7 @@
     };
     const dirs =[[0,-1],[1,0],[0,1],[-1,0]];//
 
+    const levelbox = document.getElementById("level");
     const canvas = document.getElementById("Maze3D");
     const TileSize = 40;
     [canvas.width,canvas.height] = [width*TileSize,height*TileSize]
@@ -35,6 +39,8 @@
     const getRandomInt = (max) => Math.floor(Math.random() * max);
 
     const mazeInit = () => {
+      mSize.x = 2*width+1;
+      mSize.y = 2*height+1;
       maze = Array.from({ length: mSize.y }, () => Array(mSize.x).fill(1));
       [start.x,start.y] = [getRandomInt(width),getRandomInt(height)];
       do{
@@ -48,10 +54,15 @@
       }
       return array;
     }
-    function mazeGenerator(x,y){
+    function makemaze(){
+      levelbox.innerText = "LeveL:"+level+"("+width+","+height+")"
+      mazeGenerator();
+      onclick3dm();
+    }
+    function mazeGenerator(){
       mazeInit();
-      dig(x,y);
-      randWallBraek(x,y);
+      dig(2*start.x+1,2*start.y+1);
+      randWallBraek();
       setplayer();
       window.addEventListener("load", main(), false);
     }
@@ -90,14 +101,20 @@
       }
     }
     function onclick2dm(){
-      mazeGenerator(2*start.x+1,2*start.y+1);
+      mode3D = false;
+      canvas.width = width * TileSize;
+      canvas.height = height * TileSize;
       draw2dm();
+      setPlayerImg();
+      player.img.onload = () => {
+        ctx.drawImage(player.img, (player.x)*TileSize +4, (player.y)*TileSize +4);
+      }
     }
     function draw2dm(){
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const wallWidth = {
-        x: canvas.width/(width*10),
-        y: canvas.height/(height*10)
+        x: 4,
+        y: 4
       }
       ctx.fillStyle = "black";
       for(let y = 0; y <= height; y++){
@@ -116,14 +133,10 @@
       ctx.fillRect((start.x*10+2)*wallWidth.x, (start.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
       ctx.fillStyle="red";
       ctx.fillRect((goal.x*10+2)*wallWidth.x, (goal.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
-      player.img.onload = () => {
-        draw2dm();
-        ctx.drawImage(player.img, (player.x)*TileSize +4, (player.y)*TileSize +4);
-      }
     }
 
     function onclick3dm(){
-      mazeGenerator(2*start.x+1,2*start.y+1);
+      mode3D = true;
       canvas.width = 720;
       canvas.height= canvas.width*3/4;
       draw3dm();
@@ -134,7 +147,8 @@
     }
 
     function playerView(){
-      const {x,y,dir} = player;
+      const {dir} = player;
+      const [x, y] = [2*player.x+ 1, 2*player.y+1];
       const [dirx,diry] = dirs[dir];
       const [dirvx,dirvy] = dirs[(dir+1)%4];
       
@@ -173,80 +187,204 @@
           isWall(x + 6*dirx + dirvx, y + 6*diry + dirvy),
         ],
       ]
+      const ff = [
+        player.x +   dirx == goal.x && player.y +   diry == goal.y,
+        player.x + 2*dirx == goal.x && player.y + 2*diry == goal.y
+      ]
 
       const view ={
         vw: vw,
-        hw: hw
+        hw: hw,
+        ff: ff
       }
-      console.log(view)
       return view;
     }
     function draw3dm(){
-      const cell = canvas.width/40;
+      const cell = canvas.width/80;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       player.view = playerView();
-      const [hw,vw] = [player.view.hw,player.view.hw];  
+      const { hw, vw, ff } = player.view;
 
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, 30*cell);
-      ctx.fillStyle = "Gray"
-      ctx.fillRect(0, 0, canvas.width, 9*cell);
-      ctx.fillRect(0, 21*cell, canvas.width, 9*cell);
-
-      ctx.fillStyle = "DarkGray";
+      ctx.fillStyle = "#555";
+      ctx.fillRect(0, 0, canvas.width, 60*cell);
+      ctx.fillStyle = "#777"
+      ctx.fillRect(0, 0, canvas.width, 19*cell);
+      ctx.fillRect(0, 41*cell, canvas.width, 19*cell);
       ctx.lineWidth = 1;
 
-// w*h:40*30  vw3:12*12 3, vw2:16*16 4 ,vw1:24*24 6 
-
-      if(hw[3][0]) ctx.fillRect(11*cell, 9*cell, 3*cell, 12*cell);
-      if(hw[3][1]) ctx.fillRect(26*cell, 9*cell, 3*cell, 12*cell);
-
-      if(vw[2][0]) ctx.fillRect(0, 9*cell, 14*cell, 12*cell);
-      if(vw[2][1]) ctx.fillRect(11*cell, 9*cell, 18*cell, 12*cell);
-      if(vw[2][2]) ctx.fillRect(26*cell, 9*cell, 14*cell, 12*cell);
-
-      if(hw[2][0]){
-        ctx.fillStyle = "blue"
+      ctx.fillStyle = "#aaa"
+      if(hw[3][0] && vw[2][0] === 0 && vw[2][1] === 0){
         ctx.beginPath();
-        ctx.moveTo(8*cell,7*cell);  ctx.lineTo(12*cell,7*cell);
-        ctx.lineTo(14*cell,9*cell); ctx.lineTo(14*cell,21*cell);
-        ctx.lineTo(12*cell,23*cell); ctx.lineTo(8*cell,23*cell);                  
+        ctx.moveTo(22*cell,18*cell);  ctx.lineTo(28*cell,18*cell);
+        ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
+        ctx.lineTo(28*cell,42*cell); ctx.lineTo(22*cell,42*cell);                  
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle ="darkGray"
+      }
+      if(hw[3][1] && vw[2][2] === 0 && vw[2][1] === 0){
+        ctx.beginPath();
+        ctx.moveTo(58*cell,18*cell);  ctx.lineTo(52*cell,18*cell);
+        ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
+        ctx.lineTo(52*cell,42*cell); ctx.lineTo(58*cell,42*cell);                     
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[2][0]){
+        ctx.beginPath();
+        ctx.moveTo(0*cell,18*cell);  ctx.lineTo(28*cell,18*cell);
+        ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
+        ctx.lineTo(28*cell,42*cell); ctx.lineTo(0*cell,42*cell);                        
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[2][2]){
+        ctx.beginPath();
+        ctx.moveTo(80*cell,18*cell);  ctx.lineTo(52*cell,18*cell);
+        ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
+        ctx.lineTo(52*cell,42*cell); ctx.lineTo(80*cell,42*cell);                        
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[2][1]){
+        ctx.beginPath();
+        ctx.moveTo(22*cell,18*cell);  ctx.lineTo(58*cell,18*cell);
+        ctx.lineTo(58*cell,42*cell); ctx.lineTo(22*cell,42*cell);                        
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(ff[1]){
+        ctx.fillStyle = "#000"
+        ctx.beginPath();
+        ctx.moveTo(30*cell,42.5*cell);  ctx.lineTo(50*cell,42.5*cell);
+        ctx.lineTo(52*cell,44.5*cell); ctx.lineTo(28*cell,44.5*cell);                        
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "#bbb"
+      if(hw[2][0]){
+        ctx.beginPath();
+        ctx.moveTo(15*cell,13*cell);  ctx.lineTo(23*cell,13*cell);
+        if(vw[2][1]){
+          ctx.lineTo(28*cell,18*cell); ctx.lineTo(28*cell,42*cell);
+        }else{
+          ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
+        }
+        ctx.lineTo(23*cell,47*cell); ctx.lineTo(15*cell,47*cell);                           
+        ctx.closePath();
+        ctx.fill();
       }
       if(hw[2][1]){
-        ctx.fillStyle = "blue"
         ctx.beginPath();
-        ctx.moveTo(32*cell,7*cell);  ctx.lineTo(28*cell,7*cell);
-        ctx.lineTo(26*cell,9*cell); ctx.lineTo(26*cell,21*cell);
-        ctx.lineTo(28*cell,23*cell); ctx.lineTo(32*cell,23*cell);                  
+        ctx.moveTo(65*cell,13*cell);  ctx.lineTo(57*cell,13*cell);
+        if(vw[2][1]){
+          ctx.lineTo(52*cell,18*cell); ctx.lineTo(52*cell,42*cell);
+        }else{
+          ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
+        }
+        ctx.lineTo(57*cell,47*cell); ctx.lineTo(65*cell,47*cell);                        
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle ="darkGray"
+      }
+      if(vw[1][0]){
+        ctx.beginPath();
+        ctx.moveTo(0*cell,13*cell);  ctx.lineTo(23*cell,13*cell);
+        ctx.lineTo(25*cell,15*cell); ctx.lineTo(25*cell,45*cell);
+        ctx.lineTo(23*cell,47*cell); ctx.lineTo(0*cell,47*cell);                           
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[1][2]){
+        ctx.beginPath();
+        ctx.moveTo(80*cell,13*cell);  ctx.lineTo(57*cell,13*cell);
+
+        ctx.lineTo(55*cell,15*cell); ctx.lineTo(55*cell,45*cell);
+        ctx.lineTo(57*cell,47*cell); ctx.lineTo(80*cell,47*cell);                        
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[1][1]) ctx.fillRect(15*cell, 13*cell, 50*cell, 34*cell);
+      if(ff[0]){
+        ctx.fillStyle = "#000"
+        ctx.beginPath();
+        ctx.moveTo(27*cell,48*cell);  ctx.lineTo(53*cell,48*cell);
+        ctx.lineTo(57*cell,53*cell); ctx.lineTo(23*cell,53*cell);                        
+        ctx.closePath();
+        ctx.fill();
       }
 
-      if(vw[1][0]) ctx.fillRect(0, 7*cell, 12*cell, 16*cell);
-      if(vw[1][1]) ctx.fillRect(8*cell, 7*cell, 24*cell, 16*cell);
-      if(vw[1][2]) ctx.fillRect(28*cell, 7*cell, 12*cell, 16*cell);
-
+      ctx.fillStyle = "#ccc";
       if(hw[1][0]){
-        // ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
+        ctx.beginPath();
+        ctx.moveTo(2*cell,4*cell);  ctx.lineTo(14*cell,4*cell);
+        if(vw[1][1]){
+          ctx.lineTo(23*cell,13*cell); ctx.lineTo(23*cell,47*cell);
+        }else{
+          ctx.lineTo(25*cell,15*cell); ctx.lineTo(25*cell,45*cell);
+        }
+        ctx.lineTo(14*cell,56*cell); ctx.lineTo(2*cell,56*cell);                     
+        ctx.closePath();
+        ctx.fill();
       }
       if(hw[1][1]){
-        // ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+        ctx.beginPath();
+        ctx.moveTo(78*cell,4*cell);  ctx.lineTo(66*cell,4*cell);
+        if(vw[1][1]){
+          ctx.lineTo(57*cell,13*cell); ctx.lineTo(57*cell,47*cell);
+        }else{
+          ctx.lineTo(55*cell,15*cell); ctx.lineTo(55*cell,45*cell);
+        }
+
+        ctx.lineTo(66*cell,56*cell); ctx.lineTo(78*cell,56*cell);                      
+        ctx.closePath();
+        ctx.fill();
       }
+      if(vw[0][0]){
+        ctx.beginPath();
+        ctx.moveTo(0*cell,4*cell);  ctx.lineTo(14*cell,4*cell);
+        ctx.lineTo(18*cell,8*cell); ctx.lineTo(18*cell,52*cell);
+        ctx.lineTo(14*cell,56*cell); ctx.lineTo(0*cell,56*cell);                     
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[0][2]){
+        ctx.beginPath();
+        ctx.moveTo(80*cell,4*cell);  ctx.lineTo(66*cell,4*cell);
+        ctx.lineTo(62*cell,8*cell); ctx.lineTo(62*cell,52*cell);
+        ctx.lineTo(66*cell,56*cell); ctx.lineTo(80*cell,56*cell);                      
+        ctx.closePath();
+        ctx.fill();
+      }
+      if(vw[0][1]) ctx.fillRect(2*cell, 4*cell, 76*cell, 52*cell);
 
-      if(vw[0][0]) ctx.fillRect(0, 3*cell, 8*cell, 24*cell);
-      if(vw[0][1]) ctx.fillRect(2*cell, 3*cell, 36*cell, 24*cell);
-      if(vw[0][2]) ctx.fillRect(32*cell, 3*cell, 8*cell, 24*cell);
-
+      ctx.fillStyle = "#ddd";
       if(hw[0][0]){
-        // ctx.fillRect(11*cell, 9*cell, 3*cell, 8*cell);
+        ctx.beginPath();
+        ctx.moveTo(0*cell,0*cell);  ctx.lineTo(10*cell,0*cell);
+        if(vw[0][1]){
+          ctx.lineTo(14*cell,4*cell); ctx.lineTo(14*cell,56*cell);
+        }else{
+          ctx.lineTo(18*cell,8*cell); ctx.lineTo(18*cell,52*cell);
+        }
+        ctx.lineTo(10*cell,60*cell); ctx.lineTo(0*cell,60*cell);                     
+        ctx.closePath();
+        ctx.fill();
       }
       if(hw[0][1]){
-        // ctx.fillRect(26*cell, 9*cell, 3*cell, 8*cell);
+        ctx.beginPath();
+        ctx.moveTo(80*cell,0*cell);  ctx.lineTo(70*cell,0*cell);
+        if(vw[0][1]){
+          ctx.lineTo(66*cell,4*cell); ctx.lineTo(66*cell,56*cell);
+        }else{
+          ctx.lineTo(62*cell,8*cell); ctx.lineTo(62*cell,52*cell);
+        }
+        ctx.lineTo(70*cell,60*cell); ctx.lineTo(80*cell,60*cell);                      
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle="#000";
+        
       }
     }
 
@@ -268,7 +406,13 @@
       }
     }
     function isGoal(){
-      if(player.x == goal.x && player.y == goal.y) alert("goal!");
+      if(player.x == goal.x && player.y == goal.y){
+        alert("goal, but next Level is has begun");
+        level++;
+        width += getRandomInt(2);
+        height += getRandomInt(2);
+        makemaze();
+      }
     };
     
   //key関連
@@ -277,7 +421,6 @@
       const key_code = event.keyCode;
       if( key_code === 37 ) player.dir = (player.dir+3) % 4;
       if( key_code === 38 ) {
-        console.log(player);
         if(maze[2*player.y+1+dirs[player.dir][1]][2*player.x+1+dirs[player.dir][0]]==0){
           player.x += dirs[player.dir][0];
           player.y += dirs[player.dir][1];
@@ -285,7 +428,12 @@
       }
       if( key_code === 39 ) player.dir = (player.dir+1) % 4;
       if( key_code === 40 ) player.dir = (player.dir+2) % 4;
-      setPlayerImg();
+      if(mode3D){
+        draw3dm();
+      }else{
+        draw2dm();
+        setPlayerImg();
+      }
       event.preventDefault();
       isGoal();
     }
