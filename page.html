@@ -10,8 +10,20 @@
 </head>
 <body>
 
-  <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
-  <div id="level" style="min-width: 100px"></div><button onclick="makemaze()">map生成</button>
+  <div style="display:flex">
+    <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
+    <div style="display:block;">
+      操作<br>
+      [W,↑]:前進<br>
+      [A,←]:左を向く<br>
+      [S,↓]:後ろを向く<br>
+      [D,→]:右を向く<br>
+    </div>
+  </div>
+  <div style="display:flex">
+    <button onclick="makemaze()">map生成</button>
+    <div id="level" style="min-width: 100px;margin-left: 8px;"></div>
+  </div>
   <!-- <button onclick="onclick3dm()">3dmode</button>
   <button onclick="onclick2dm()">2dmode</button> -->
   <script>
@@ -419,15 +431,15 @@
     function keyEvent( event ) { 
       if (event.repeat) return;
       const key_code = event.keyCode;
-      if( key_code === 37 ) player.dir = (player.dir+3) % 4;
-      if( key_code === 38 ) {
+      if( key_code === 37 || key_code === 65) player.dir = (player.dir+3) % 4;
+      if( key_code === 38 || key_code === 87) {
         if(maze[2*player.y+1+dirs[player.dir][1]][2*player.x+1+dirs[player.dir][0]]==0){
           player.x += dirs[player.dir][0];
           player.y += dirs[player.dir][1];
         }
       }
-      if( key_code === 39 ) player.dir = (player.dir+1) % 4;
-      if( key_code === 40 ) player.dir = (player.dir+2) % 4;
+      if( key_code === 39 || key_code === 68) player.dir = (player.dir+1) % 4;
+      if( key_code === 40 || key_code === 83) player.dir = (player.dir+2) % 4;
       if(mode3D){
         draw3dm();
       }else{
