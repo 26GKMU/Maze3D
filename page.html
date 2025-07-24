@@ -148,7 +148,7 @@
 
     function onclick3dm(){
       mode3D = true;
-      canvas.height = Math.floor((window.innerHeight-1)/60)*60
+      canvas.height = Math.floor((window.innerHeight)/60-1)*60
       canvas.width = canvas.height*4/3;
       draw3dm();
     }
@@ -235,12 +235,12 @@
         ctx.fill();
       }
       if(gl[1]){
-        ctx.beginPath();  
+        ctx.beginPath();
         ctx.ellipse(40*cell, 50*cell, 12*cell, 2*cell, 0, 0, Math.PI * 2);
         ctx.fill();
       }
       if(gl[2]){
-        ctx.beginPath();  
+        ctx.beginPath();
         ctx.ellipse(80*cell, 50*cell, 12*cell, 2*cell, 0, 0, Math.PI * 2);
         ctx.fill();
       }
