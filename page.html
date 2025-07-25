@@ -10,13 +10,19 @@
 </head>
 <body>
   <div style="display:flex;margin-top:6px;margin-left:6px">
-    <button id="startButton" onclick="makemaze()">Game Start</button>
-    <!-- <button onclick="onclick3dm()">3dmode</button>
-    <button onclick="onclick2dm()">2dmode</button> -->
+    <button id="startButton" onclick="onclickmakemaze()">Game Start</button>
+    <!-- <button onclick="make3dm()">3dmode</button>
+    <button onclick="make2dm()">2dmode</button> -->
     <div id="level" style="min-width: 100px;margin-left: 8px;"></div>
   </div>
-  <div style="display:flex">
-    <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
+  <div style="display:inline-flex">
+    <div style="position:relative">
+      <div id="nextLevel" style="margin:8px;position:absolute;z-index:9;opacity:0;transition:0.8s">
+        <img src="img/NEXTLevelStart.png" width="960" height="720">
+      </div>
+      <canvas id="Maze3D" style="margin:8px;border:1px solid black" ></canvas>
+      <div id="timer" style="display:none;position:absolute;font-size:24px;"></div>
+    </div>
     <div style="display:block;">
       操作<br>
       [W,↑]:前進<br>
@@ -28,27 +34,29 @@
 
   <script>
 
-    let [level,width,height] = [1,3,4]  //レベル、マスのサイズ
-    let mode3D = true;
+    let [level,width,height] = [1,4,3]  //レベル、マスのサイズ
+    let gameStatus = 0;//0 stop 1 3dmode 2 2dmode
+
     const mSize = { x: width*2+1 , y: height*2+1 }; //壁も含めたサイズ
-    const start = { 
+    const start = {
       x: 0,
       y: 0
     };
-    const goal ={ 
+    const goal ={
       x: width,
       y: height
     };
     const dirs =[[0,-1],[1,0],[0,1],[-1,0]];//↑→↓←
 
+    const timer = document.getElementById("timer");
     const levelbox = document.getElementById("level");
     const canvas = document.getElementById("Maze3D");
+    const nextLevel = document.getElementById("nextLevel");
     const TileSize = 40;//Test用2dmode用
     const ctx = canvas.getContext("2d");
-    
+
     let maze = Array.from({ length: mSize.y }, () => Array(mSize.x).fill(1));
     const getRandomInt = (max) => Math.floor(Math.random() * max);
-
     const mazeInit = () => {
       mSize.x = 2*width+1;
       mSize.y = 2*height+1;
@@ -56,7 +64,7 @@
       [start.x,start.y] = [getRandomInt(width),getRandomInt(height)];
       do{
         [goal.x,goal.y] = [getRandomInt(width),getRandomInt(height)];
-      }while(goal.x == start.x && goal.y == start.y);      
+      }while(goal.x == start.x && goal.y == start.y);
     }
     function shuffle(array){
       for (let i = 0; i < array.length; i++) {
@@ -65,11 +73,16 @@
       }
       return array;
     }
+
+    function onclickmakemaze(){
+      document.getElementById("startButton").style.display = "none";
+      makemaze();
+      setTimer(180);
+    }
     function makemaze(){
       levelbox.innerText = "LeveL:"+level+"("+width+","+height+")";
-      document.getElementById("startButton").style.display = "none";
       mazeGenerator();
-      onclick3dm();
+      make3dm();
     }
     function mazeGenerator(){
       mazeInit();
@@ -112,8 +125,9 @@
         maze[y][x] = 0;
       }
     }
-    function onclick2dm(){
-      mode3D = false;
+
+    function make2dm(){
+      gameStatus = 2;
       canvas.width = width * TileSize;
       canvas.height = height * TileSize;
       draw2dm();
@@ -147,23 +161,25 @@
       ctx.fillRect((goal.x*10+2)*wallWidth.x, (goal.y*10+2)*wallWidth.y , 6*wallWidth.x, 6*wallWidth.y);
     }
 
-    function onclick3dm(){
-      mode3D = true;
-      canvas.height = Math.floor((window.innerHeight)/60-1)*60
+    function make3dm(){
+      gameStatus = 1;
+      canvas.height = Math.floor((window.innerHeight)/60-1)*60;
+      nextLevel.firstElementChild.height = canvas.height;
       canvas.width = canvas.height*4/3;
+      nextLevel.firstElementChild.width = canvas.width;
+      nextLevel.style.top = canvas.style.top;
+      nextLevel.style.right = canvas.style.right;
       draw3dm();
     }
-    
     function isWall(x,y){
       return (x >= 0 && x < mSize.x && y >= 0 && y < mSize.y && maze[y][x]===1)
     }
-
     function playerView(){
       const {dir} = player;
       const [x, y] = [2*player.x+ 1, 2*player.y+1];
       const [dirx,diry] = dirs[dir];
       const [dirvx,dirvy] = dirs[(dir+1)%4];
-      
+
       const vw = [
         [
           isWall(x + dirx - 2*dirvx, y + diry - 2*dirvy),
@@ -266,7 +282,7 @@
         ctx.beginPath();
         ctx.moveTo(22*cell,18*cell);  ctx.lineTo(28*cell,18*cell);
         ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
-        ctx.lineTo(28*cell,42*cell); ctx.lineTo(22*cell,42*cell);                  
+        ctx.lineTo(28*cell,42*cell); ctx.lineTo(22*cell,42*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -274,7 +290,7 @@
         ctx.beginPath();
         ctx.moveTo(58*cell,18*cell);  ctx.lineTo(52*cell,18*cell);
         ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
-        ctx.lineTo(52*cell,42*cell); ctx.lineTo(58*cell,42*cell);                     
+        ctx.lineTo(52*cell,42*cell); ctx.lineTo(58*cell,42*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -282,7 +298,7 @@
         ctx.beginPath();
         ctx.moveTo(0*cell,18*cell);  ctx.lineTo(28*cell,18*cell);
         ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
-        ctx.lineTo(28*cell,42*cell); ctx.lineTo(0*cell,42*cell);                        
+        ctx.lineTo(28*cell,42*cell); ctx.lineTo(0*cell,42*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -290,14 +306,14 @@
         ctx.beginPath();
         ctx.moveTo(80*cell,18*cell);  ctx.lineTo(52*cell,18*cell);
         ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
-        ctx.lineTo(52*cell,42*cell); ctx.lineTo(80*cell,42*cell);                        
+        ctx.lineTo(52*cell,42*cell); ctx.lineTo(80*cell,42*cell);
         ctx.closePath();
         ctx.fill();
       }
       if(vw[2][1]){
         ctx.beginPath();
         ctx.moveTo(22*cell,18*cell);  ctx.lineTo(58*cell,18*cell);
-        ctx.lineTo(58*cell,42*cell); ctx.lineTo(22*cell,42*cell);                        
+        ctx.lineTo(58*cell,42*cell); ctx.lineTo(22*cell,42*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -311,7 +327,7 @@
         }else{
           ctx.lineTo(29*cell,19*cell); ctx.lineTo(29*cell,41*cell);
         }
-        ctx.lineTo(23*cell,47*cell); ctx.lineTo(15*cell,47*cell);                           
+        ctx.lineTo(23*cell,47*cell); ctx.lineTo(15*cell,47*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -323,7 +339,7 @@
         }else{
           ctx.lineTo(51*cell,19*cell); ctx.lineTo(51*cell,41*cell);
         }
-        ctx.lineTo(57*cell,47*cell); ctx.lineTo(65*cell,47*cell);                        
+        ctx.lineTo(57*cell,47*cell); ctx.lineTo(65*cell,47*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -331,7 +347,7 @@
         ctx.beginPath();
         ctx.moveTo(0*cell,13*cell);  ctx.lineTo(23*cell,13*cell);
         ctx.lineTo(25*cell,15*cell); ctx.lineTo(25*cell,45*cell);
-        ctx.lineTo(23*cell,47*cell); ctx.lineTo(0*cell,47*cell);                           
+        ctx.lineTo(23*cell,47*cell); ctx.lineTo(0*cell,47*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -340,7 +356,7 @@
         ctx.moveTo(80*cell,13*cell);  ctx.lineTo(57*cell,13*cell);
 
         ctx.lineTo(55*cell,15*cell); ctx.lineTo(55*cell,45*cell);
-        ctx.lineTo(57*cell,47*cell); ctx.lineTo(80*cell,47*cell);                        
+        ctx.lineTo(57*cell,47*cell); ctx.lineTo(80*cell,47*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -355,7 +371,7 @@
         }else{
           ctx.lineTo(25*cell,15*cell); ctx.lineTo(25*cell,45*cell);
         }
-        ctx.lineTo(14*cell,56*cell); ctx.lineTo(2*cell,56*cell);                     
+        ctx.lineTo(14*cell,56*cell); ctx.lineTo(2*cell,56*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -368,7 +384,7 @@
           ctx.lineTo(55*cell,15*cell); ctx.lineTo(55*cell,45*cell);
         }
 
-        ctx.lineTo(66*cell,56*cell); ctx.lineTo(78*cell,56*cell);                      
+        ctx.lineTo(66*cell,56*cell); ctx.lineTo(78*cell,56*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -376,7 +392,7 @@
         ctx.beginPath();
         ctx.moveTo(0*cell,4*cell);  ctx.lineTo(14*cell,4*cell);
         ctx.lineTo(18*cell,8*cell); ctx.lineTo(18*cell,52*cell);
-        ctx.lineTo(14*cell,56*cell); ctx.lineTo(0*cell,56*cell);                     
+        ctx.lineTo(14*cell,56*cell); ctx.lineTo(0*cell,56*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -384,7 +400,7 @@
         ctx.beginPath();
         ctx.moveTo(80*cell,4*cell);  ctx.lineTo(66*cell,4*cell);
         ctx.lineTo(62*cell,8*cell); ctx.lineTo(62*cell,52*cell);
-        ctx.lineTo(66*cell,56*cell); ctx.lineTo(80*cell,56*cell);                      
+        ctx.lineTo(66*cell,56*cell); ctx.lineTo(80*cell,56*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -399,7 +415,7 @@
         }else{
           ctx.lineTo(18*cell,8*cell); ctx.lineTo(18*cell,52*cell);
         }
-        ctx.lineTo(10*cell,60*cell); ctx.lineTo(0*cell,60*cell);                     
+        ctx.lineTo(10*cell,60*cell); ctx.lineTo(0*cell,60*cell);
         ctx.closePath();
         ctx.fill();
       }
@@ -411,17 +427,18 @@
         }else{
           ctx.lineTo(62*cell,8*cell); ctx.lineTo(62*cell,52*cell);
         }
-        ctx.lineTo(70*cell,60*cell); ctx.lineTo(80*cell,60*cell);                      
+        ctx.lineTo(70*cell,60*cell); ctx.lineTo(80*cell,60*cell);
         ctx.closePath();
         ctx.fill();
 
         ctx.fillStyle="#000";
-        
+
       }
     }
 
   //player関連
     const player = new Object();
+    let timeout;
     function setplayer(){
       player.img = new Image();
       player.x = start.x
@@ -439,16 +456,18 @@
     }
     function isGoal(){
       if(player.x == goal.x && player.y == goal.y){
-        alert("goal, but next Level is has begun");
+        nextLevel.style.opacity = 1;
+        clearTimeout(timeout);
+        timeout = setTimeout(()=>nextLevel.style.opacity = 0, 2000);
         level++;
-        width += getRandomInt(2);
-        height += getRandomInt(2);
+        width += (2- Math.round((getRandomInt(3)+getRandomInt(3))/2));
+        height += (2- Math.round((getRandomInt(3)+getRandomInt(3))/2));
         makemaze();
       }
     };
-    
+
   //key関連
-    function keyEvent( event ) { 
+    function keyEvent( event ) {
       if (event.repeat) return;
       const key_code = event.keyCode;
       if( key_code === 37 || key_code === 65) player.dir = (player.dir+3) % 4;
@@ -460,9 +479,9 @@
       }
       if( key_code === 39 || key_code === 68) player.dir = (player.dir+1) % 4;
       if( key_code === 40 || key_code === 83) player.dir = (player.dir+2) % 4;
-      if(mode3D){
+      if(gameStatus === 1){
         draw3dm();
-      }else{
+      }else if(gameStatus === 2){
         draw2dm();
         setPlayerImg();
       }
@@ -471,6 +490,35 @@
     }
     function main(){
       addEventListener("keydown", keyEvent, false);
+    }
+
+  //gameEvent関連
+    let time = 180;
+    let interval;
+    function secTommss(sec){
+      const mm = Math.floor(time/60);
+      const ss = time % 60;
+      return ("0"+ mm).slice(-2)+":"+("0"+ ss).slice(-2);
+    }
+    function setTimer(sec){
+      time = sec;
+      timer.style.display = "block";
+      timer.style.top = canvas.height/120+6 +"px";
+      timer.style.right = canvas.width/80+12 +"px";
+      timer.innerText = secTommss(time);
+      interval = setInterval(countDown, 1000);
+    }
+    function countDown(){
+      if(time>0){
+        time--;
+        timer.innerText = secTommss(time);
+      }else{
+        alert("時間切れ！ score:"+level*width*height);
+        console.log(level,width,height,level*width*height);
+        clearInterval(interval);
+        [level,width.height] = [1,4,3];
+        document.getElementById("startButton").style.display = "block";
+      }
     }
 
   </script>
