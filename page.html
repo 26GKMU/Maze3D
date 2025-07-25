@@ -9,8 +9,8 @@
   </style>
 </head>
 <body>
-  <div style="display:flex">
-    <button onclick="makemaze()">map生成</button>
+  <div style="display:flex;margin-top:6px;margin-left:6px">
+    <button id="startButton" onclick="makemaze()">Game Start</button>
     <!-- <button onclick="onclick3dm()">3dmode</button>
     <button onclick="onclick2dm()">2dmode</button> -->
     <div id="level" style="min-width: 100px;margin-left: 8px;"></div>
@@ -66,7 +66,8 @@
       return array;
     }
     function makemaze(){
-      levelbox.innerText = "LeveL:"+level+"("+width+","+height+")"
+      levelbox.innerText = "LeveL:"+level+"("+width+","+height+")";
+      document.getElementById("startButton").style.display = "none";
       mazeGenerator();
       onclick3dm();
     }
