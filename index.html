@@ -510,6 +510,10 @@
     }
     function countDown(){
       if(time>0){
+        if(time<60){
+          const red = 1 - time/60;
+          timer.style.color = "rgba("+red*255+",0,0)";
+        }
         time--;
         timer.innerText = secTommss(time);
       }else{
