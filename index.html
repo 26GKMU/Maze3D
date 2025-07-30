@@ -518,7 +518,7 @@
         timer.innerText = secTommss(time);
       }else{
         alert("時間切れ！ score:"+level*width*height);
-        console.log(level,width,height,level*width*height);
+        gameStatus = 0;
         clearInterval(interval);
         [level,width,height] = [1,4,3];
         document.getElementById("startButton").style.display = "block";
